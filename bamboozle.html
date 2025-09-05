@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>DOL's Adventure – Galactic Hometown</title>
+  <style>
+    body {
+      font-family: "Poppins", sans-serif;
+      background: radial-gradient(circle at bottom, #0d0d2b 0%, #000000 100%);
+      color: #fff;
+      margin: 0;
+      padding: 0;
+      text-align: center;
+      overflow-x: hidden;
+    }
+    h1 {
+      margin: 20px;
+      font-size: 3em;
+      color: #ffdd57;
+      text-shadow: 0 0 15px #ff9, 0 0 30px #f06;
+    }
+    p {
+      font-size: 1.2em;
+      color: #eee;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(6, 120px);
+      grid-gap: 20px;
+      justify-content: center;
+      margin: 40px auto;
+      max-width: 850px;
+    }
+    .tile {
+      width: 100px;
+      height: 100px;
+      background: radial-gradient(circle at 30% 30%, #ff6, #f06);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      font-weight: bold;
+      color: #fff;
+      cursor: pointer;
+      box-shadow: 0 0 20px rgba(255, 200, 0, 0.8), inset 0 0 15px rgba(0,0,0,0.5);
+      transition: transform 0.3s ease;
+    }
+    .tile:hover {
+      transform: scale(1.15) rotate(10deg);
+      background: radial-gradient(circle at 40% 40%, #0ff, #06f);
+    }
+    .used {
+      background: #333 !important;
+      box-shadow: inset 0 0 10px #000;
+      color: #aaa;
+      cursor: not-allowed;
+    }
+    .question {
+      display: none;
+      font-size: 22px;
+      margin: 20px auto;
+      padding: 30px;
+      border-radius: 20px;
+      background: rgba(20, 20, 40, 0.95);
+      max-width: 650px;
+      color: #fff;
+      box-shadow: 0 0 30px rgba(0, 255, 255, 0.8);
+      animation: pop 0.4s ease;
+    }
+    @keyframes pop {
+      from { transform: scale(0.8); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+    .close-btn, .answer-btn {
+      margin-top: 15px;
+      padding: 10px 20px;
+      font-size: 18px;
+      background: linear-gradient(135deg, #ff416c, #ff4b2b);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+    .close-btn:hover, .answer-btn:hover {
+      background: linear-gradient(135deg, #36d1dc, #5b86e5);
+    }
+    .astronaut {
+      position: fixed;
+      right: 20px;
+      bottom: 20px;
+      width: 120px;
+      animation: floaty 6s ease-in-out infinite;
+    }
+    @keyframes floaty {
+      0% { transform: translateY(0) rotate(0deg); }
+      50% { transform: translateY(-20px) rotate(5deg); }
+      100% { transform: translateY(0) rotate(0deg); }
+    }
+  </style>
+</head>
+<body>
+
+<h1>👩‍🚀 DOL's Adventure 🌌</h1>
+<p>Welcome to the Galactic Hometown! Click a planet to discover its challenge 🌍✨</p>
+
+<div class="grid" id="grid"></div>
+
+<div id="questionBox" class="question">
+  <p id="questionText"></p>
+  <p id="challengeText" style="font-style:italic; color:#ff9; margin-top:10px;"></p>
+  <button class="answer-btn" onclick="showAnswer()">Show Answer</button><br>
+  <p id="answerText" style="margin-top:15px; font-weight:bold; color:#ffdd57; display:none;"></p>
+  <button class="close-btn" onclick="closeQuestion()">Close</button>
+</div>
+
+<img src="https://cdn-icons-png.flaticon.com/512/3076/3076400.png" alt="Astronaut" class="astronaut">
+
+<script>
+const questions = [
+  {q:"🚑 Planet 🚀: Where do you go if you feel very sick?", a:"Hospital", trap:false},
+  {q:"💊 Planet 🚀: Where can you buy medicine?", a:"Pharmacy", trap:false},
+  {q:"👮 Planet 🚀: Where do police officers work?", a:"Police station", trap:false},
+  {q:"🚒 Planet 🚀: Where do firefighters work?", a:"Fire station", trap:false},
+  {q:"🦷 Planet 🚀: Where do you go to check your teeth?", a:"Dental clinic", trap:false},
+  {q:"🎬 Planet 🚀: Where can you watch a movie?", a:"Cinema", trap:false},
+  {q:"🌳 Planet 🚀: Where can you relax and see trees?", a:"Park", trap:false},
+  {q:"🛒 Planet 🚀: Where can you go shopping?", a:"Shopping mall", trap:false},
+  {q:"🍔 Planet 🚀: Where can you eat food?", a:"Restaurant", trap:false},
+  {q:"📚 Planet 🚀: Where do you read and borrow books?", a:"Library", trap:false},
+  {q:"🏫 Planet 🚀: Where do children study?", a:"School", trap:false},
+  {q:"🎓 Planet 🚀: Where do students go after high school but before university?", a:"College", trap:false},
+  {q:"🏛 Planet 🚀: Where do you get higher education and degrees?", a:"University", trap:false},
+  {q:"🗣 Planet 🚀: Where can you learn English or another language?", a:"Language center", trap:false},
+  {q:"🏟 Planet 🚀: Where do you play football?", a:"Stadium", trap:false},
+  {q:"🎯 Bonus Planet!", a:"Double your team’s points", trap:true},
+  {q:"💣 Black Hole Trap!", a:"Lose 5 points", trap:true},
+  {q:"🔄 Wormhole Swap!", a:"Switch points with another team", trap:true}
+];
+
+const normalChallenges = [
+  "🔠 Spell out the word correctly!",
+  "🎤 Speaking challenge: Make a sentence with the word!",
+  "✏️ Draw it on the board for your team to guess!"
+];
+
+const trapChallenges = [
+  "💃 Do a silly dance!",
+  "🤸 Do 5 jumps!",
+  "🎶 Sing a short song!"
+];
+
+let currentIndex = null;
+
+function buildGrid() {
+  const grid = document.getElementById("grid");
+  grid.innerHTML = "";
+  questions.forEach((obj, i) => {
+    const tile = document.createElement("div");
+    tile.className = "tile";
+    tile.innerText = i+1;
+    tile.onclick = () => showQuestion(i, tile);
+    grid.appendChild(tile);
+  });
+}
+
+function showQuestion(index, tile) {
+  if (tile.classList.contains("used")) return;
+  currentIndex = index;
+  document.getElementById("questionText").innerText = questions[index].q;
+
+  if (!questions[index].trap) {
+    const challenge = normalChallenges[Math.floor(Math.random()*normalChallenges.length)];
+    document.getElementById("challengeText").innerText = challenge;
+  } else {
+    const trapChallenge = trapChallenges[Math.floor(Math.random()*trapChallenges.length)];
+    document.getElementById("challengeText").innerText = trapChallenge;
+  }
+
+  document.getElementById("answerText").style.display = "none";
+  document.getElementById("questionBox").style.display = "block";
+  tile.classList.add("used");
+}
+
+function showAnswer() {
+  if (currentIndex !== null) {
+    document.getElementById("answerText").innerText = "✅ Answer: " + questions[currentIndex].a;
+    document.getElementById("answerText").style.display = "block";
+  }
+}
+
+function closeQuestion() {
+  document.getElementById("questionBox").style.display = "none";
+}
+
+buildGrid();
+</script>
+
+</body>
+</html>
